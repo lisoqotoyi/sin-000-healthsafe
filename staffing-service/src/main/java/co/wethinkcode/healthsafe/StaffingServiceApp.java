@@ -16,6 +16,7 @@ import java.net.http.HttpResponse;
 import java.time.Duration;
 import java.util.ArrayList;
 import java.util.List;
+import java.util.Locale;
 import java.util.Map;
 import java.util.UUID;
 import java.time.Instant;
@@ -54,7 +55,7 @@ public class StaffingServiceApp {
     }
 
     private static Map<String, Object> buildSchedule(String wardId) throws DependencyException {
-        String safeWardId = URI.create("http://localhost/" + wardId).getPath().substring(1);
+        String safeWardId = normalizeWardId(wardId);
         Map<String, Object> ward = getJson(WARD_URL + "/wards/" + safeWardId);
         int level = ((Number) getJson(ALERT_URL + "/alert-level").get("level")).intValue();
         int doctorCount = Math.max(1, 1 + level / 2);
@@ -66,7 +67,7 @@ public class StaffingServiceApp {
     }
 
     private static void publishStaffingEvent(String wardId, Map<String, Object> schedule) throws Exception {
-        Map<String, Object> event = Map.of("eventId", UUID.randomUUID().toString(), "wardId", wardId,
+        Map<String, Object> event = Map.of("eventId", UUID.randomUUID().toString(), "wardId", normalizeWardId(wardId),
                 "status", "UPDATED", "timestamp", Instant.now().toString(), "schedule", schedule);
         ActiveMQConnectionFactory factory = new ActiveMQConnectionFactory(MqConfig.BROKER_URL);
         try (Connection connection = factory.createConnection()) {
@@ -78,6 +79,26 @@ public class StaffingServiceApp {
             producer.close();
             session.close();
         }
+    }
+
+    static String normalizeWardId(String value) {
+        if (value == null) {
+            return "";
+        }
+        String cleaned = value.trim().replaceAll("\\s+", "").toUpperCase(Locale.ROOT);
+        if (cleaned.isEmpty()) {
+            return "";
+        }
+        if (cleaned.startsWith("W-")) {
+            cleaned = cleaned.substring(2);
+        } else if (cleaned.startsWith("W")) {
+            cleaned = cleaned.substring(1);
+        }
+        cleaned = cleaned.replaceFirst("^0+(?=\\d)", "");
+        if (cleaned.isEmpty()) {
+            return "W-0";
+        }
+        return "W-" + cleaned;
     }
 
     @SuppressWarnings("unchecked")
