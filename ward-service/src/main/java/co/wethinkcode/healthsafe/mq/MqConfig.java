@@ -10,9 +10,9 @@ package co.wethinkcode.healthsafe.mq;
  */
 public final class MqConfig {
 
-    public static final String BROKER_URL = "tcp://localhost:61616";
-    public static final String TOPIC = "staffing-events-topic";
-    public static final String QUEUE = "equipment-failure-queue";
+    public static final String BROKER_URL = System.getenv().getOrDefault("ACTIVEMQ_BROKER_URL", "tcp://localhost:61616");
+    public static final String TOPIC = System.getenv().getOrDefault("STAFFING_EVENTS_TOPIC", "staffing-events-topic");
+    public static final String QUEUE = System.getenv().getOrDefault("EQUIPMENT_FAILURE_QUEUE", "equipment-failure-queue");
 
     private MqConfig() {
     }
