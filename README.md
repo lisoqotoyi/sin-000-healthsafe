@@ -278,4 +278,5 @@ configuration class because the services build independently.
 - [Alert level service](alert-level-service/README.md)
 - [Equipment alert queue](equipment-alert-service/README.md)
 - [Broker setup](common/README.md)
+- 
   WTC-529W66DN
