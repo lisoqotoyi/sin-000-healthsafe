@@ -80,15 +80,25 @@ mvn package
 java -jar target/ingestion-service.jar
 ```
 
-Listens on port `7030`. Currently just exposes `/health` — the actual CSV
-parsing/cleaning logic is a TODO.
+Listens on port `7030`. `GET /health` returns `OK`, and `GET /wards` returns the
+cleaned ward records as JSON. The service reads the CSV from the classpath when
+it starts; a missing resource or unreadable CSV prevents startup.
+
+The current cleaner normalizes ward IDs to uppercase `W-` IDs, trims and
+collapses whitespace, title-cases wing and department names, maps `Pediatrics`
+to `Paediatrics` and `Icu` to `ICU`, and merges duplicate normalized IDs. It
+accepts bed counts from 0 to 1000; missing or invalid values become `null`, and
+invalid non-missing values are noted in the record's `notes`. It does not yet
+normalize dates or implement every possible cleanup rule in the source-data
+exercise.
 
 ## Test
 
-No automated tests yet. Manually verify it's up:
+No automated test sources yet. Manually verify the endpoints:
 
 ```
 curl http://localhost:7030/health   # -> OK
+curl http://localhost:7030/wards    # -> cleaned JSON list
 ```
 
 To add real tests, add JUnit 5 + the Surefire plugin to `pom.xml`, put tests under

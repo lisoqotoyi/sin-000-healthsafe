@@ -53,12 +53,21 @@ from their own directories at the project root).
 docker compose ps          # confirm the broker container is healthy
 ```
 
-Once the TODOs below are implemented, verify end-to-end by publishing a message from
-`staffing-service` and confirming the consumer(s) receive it — e.g. via logs, or by
-watching the topic in the web console.
+Verify end-to-end by requesting a staffing update from `staffing-service` and
+confirming that `ward-service` logs the received topic event:
 
-## TODO
+```
+curl -X POST http://localhost:7033/staffing/W-05
+```
 
-- Add `activemq-client` publish logic to `staffing-service` on its stage/state-change endpoint.
-- Add `activemq-client` subscriber logic to consumer service(s) above, replacing any
-  direct synchronous calls to `staffing-service`.
+For the equipment queue, post a failure through `ward-service` and confirm
+`equipment-alert-service` logs the consumed alert:
+
+```
+curl -X POST http://localhost:7031/wards/W-05/equipment-failures \
+  -H 'Content-Type: application/json' \
+  -d '{"equipment":"ventilator-2","failure":"Power failure"}'
+```
+
+Both producer and consumer services need the broker running and use the MQ
+environment variables documented in the [root README](../README.md#configuration).
